@@ -9,6 +9,9 @@ import os
 # --- Paths ---
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+from dotenv import load_dotenv
+load_dotenv(BASE_DIR / ".env")
+
 # --- Seguridad (solo dev) ---
 SECRET_KEY = "django-insecure-fp-p1v73$)v$)bbr*0o7=)v6-bgfs2eyyvqbchmu^bz^an1ax9"
 DEBUG = True
@@ -52,10 +55,10 @@ AUTHENTICATION_BACKENDS = [
     "allauth.account.auth_backends.AuthenticationBackend",         # allauth
 ]
 
-# Ajustes simples para dev (puedes afinarlos luego)
-ACCOUNT_EMAIL_REQUIRED = False
-ACCOUNT_EMAIL_VERIFICATION = "none"
-ACCOUNT_AUTHENTICATION_METHOD = "username"
+# Django 5.2 / allauth ≥ 65.0
+ACCOUNT_LOGIN_METHODS = {"username"}  # puedes usar {"email"} o {"username", "email"}
+ACCOUNT_SIGNUP_FIELDS = ["email", "username*", "password1*", "password2*"]
+
 
 # A dónde van las rutas de login/logout (usamos allauth directamente)
 LOGIN_URL = "account_login"       # /accounts/login/
@@ -129,9 +132,8 @@ MEDIA_ROOT = BASE_DIR / "media"
 # --- Clave por defecto de PK ---
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# --- URLs públicas (para back_urls en MP) ---
-# En local usa http://127.0.0.1:8000; con ngrok exporta:
-#   PUBLIC_BASE_URL="https://<tu-ngrok>.ngrok-free.app"
+
+
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://127.0.0.1:8000")
 
 # --- Mercado Pago (desde variables de entorno) ---
