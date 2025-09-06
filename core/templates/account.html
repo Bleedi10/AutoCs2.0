@@ -1,0 +1,218 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Mi cuenta</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{
+      --border:#e5e7eb;--muted:#6b7280;--fg:#111827;--ok-bg:#e0f2fe;--ok-fg:#075985;
+      --warn-bg:#fee2e2;--warn-fg:#991b1b;--success-bg:#ecfdf5;--success-fg:#047857;
+      --info-bg:#eff6ff;--info-fg:#1d4ed8;--err-bg:#fef2f2;--err-fg:#b91c1c;
+    }
+    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:24px;color:var(--fg)}
+    .container{max-width:980px;margin:auto}
+    .header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .link{color:#1d4ed8;text-decoration:none}
+    .card{border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
+    .muted{color:var(--muted);font-size:14px}
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px}
+    .ok{background:var(--ok-bg);color:var(--ok-fg)}
+    .warn{background:var(--warn-bg);color:var(--warn-fg)}
+    .grid-head,.grid-row{display:grid;grid-template-columns:72px 1fr 1fr 250px;gap:12px;align-items:center}
+    .grid-head{font-weight:600;color:#374151;border-bottom:1px dashed var(--border);padding-bottom:8px;margin-bottom:8px}
+    .grid-row{padding:8px 0;border-top:1px dashed var(--border)}
+    .grid-row:first-of-type{border-top:none}
+    input[type="text"]{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px}
+    input[readonly]{background:#f9fafb;color:#6b7280}
+    .btn{padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:#111827;color:#fff;cursor:pointer}
+    .btn.secondary{background:#fff;color:#111827}
+    .btn.ghost{background:transparent;color:#111827}
+    .btn[disabled]{opacity:.55;cursor:not-allowed}
+    .row-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .msgs{margin:8px 0}
+    .msg{padding:10px;border-radius:8px;margin-bottom:8px}
+    .info{background:var(--info-bg);color:var(--info-fg)}
+    .success{background:var(--success-bg);color:var(--success-fg)}
+    .error{background:var(--err-bg);color:var(--err-fg)}
+    .hide{display:none}
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>Mi cuenta</h1>
+    <div>
+      <a class="link" href="{% url 'pricing' %}">Ver planes</a> ·
+      <a class="link" href="{% url 'logout' %}">Cerrar sesión</a>
+    </div>
+  </div>
+
+  {% if messages %}
+  <div class="msgs">
+    {% for m in messages %}
+      <div class="msg {% if m.tags %}{{ m.tags }}{% endif %}">{{ m }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="card">
+    {% if usc %}
+      <div><strong>Plan activo:</strong> {{ usc.plan.name }} <span class="pill ok">activo</span></div>
+      <div class="muted">Precio mensual: ${{ usc.plan.price_month }} CLP</div>
+    {% else %}
+      <div><strong>Sin plan activo</strong> — <a class="link" href="{% url 'pricing' %}">Contratar plan</a></div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="grid-head">
+      <div>#</div>
+      <div>RUT</div>
+      <div>Estado</div>
+      <div>Acción</div>
+    </div>
+
+    {% for slot in slots %}
+    <div class="grid-row" id="row-{{ slot.id }}">
+      <div>{{ slot.slot_index }}</div>
+
+      <!-- Un único formulario para Guardar/Agregar/Editar -->
+      <div>
+        <form method="post" action="{% url 'slot_update' slot.id %}" id="form-{{ slot.id }}">
+          {% csrf_token %}
+          <input
+            type="text"
+            id="input-{{ slot.id }}"
+            name="rut"
+            value="{{ slot.rut|default_if_none:'' }}"
+            placeholder="12.345.678-5"
+            {% if slot.rut %}readonly{% endif %}
+            {% if slot.locked_at or slot.state == 'locked' %}readonly{% endif %}
+          >
+          <!-- Botón principal (Agregar/Guardar). Oculto por defecto si el slot tiene RUT -->
+          <div class="hide" id="primary-{{ slot.id }}">
+            <button type="submit" class="btn" id="save-btn-{{ slot.id }}">Guardar</button>
+            <button type="button" class="btn secondary" id="cancel-btn-{{ slot.id }}">Cancelar</button>
+          </div>
+        </form>
+      </div>
+
+      <div>
+        {% if slot.locked_at or slot.state == 'locked' %}
+          <span class="pill warn">Bloqueado</span>
+          <div class="muted">En uso por un proceso/formulario.</div>
+        {% else %}
+          {% if slot.rut %}
+            <span class="pill ok">Disponible</span>
+            <div class="muted">Guardado. Puedes editar o limpiar.</div>
+          {% else %}
+            <span class="pill ok">Vacío</span>
+            <div class="muted">Agrega un RUT y guarda.</div>
+          {% endif %}
+        {% endif %}
+      </div>
+
+      <div class="row-actions">
+        {% if slot.locked_at or slot.state == 'locked' %}
+          <button class="btn" disabled>Editar</button>
+          <button class="btn secondary" disabled>Limpiar</button>
+        {% else %}
+          {% if slot.rut %}
+            <!-- Estado por defecto: input readonly, mostramos Editar + Limpiar -->
+            <button type="button" class="btn" id="edit-btn-{{ slot.id }}">Editar</button>
+
+            <!-- Limpiar: form aparte que envía rut="" -->
+            <form method="post" action="{% url 'slot_update' slot.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="rut" value="">
+              <button type="submit" class="btn secondary">Limpiar</button>
+            </form>
+          {% else %}
+            <!-- Slot vacío: input editable; botón principal actúa como Agregar/Guardar -->
+            <div id="addwrap-{{ slot.id }}">
+              <button type="button" class="btn" id="add-btn-{{ slot.id }}" disabled>Agregar</button>
+            </div>
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+      <p class="muted">No tienes slots disponibles aún.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+  // Utilidades mínimas
+  const $ = (id) => document.getElementById(id);
+
+  // Inicializa comportamiento por fila
+  function initRow(slotId, hasRut, isLocked) {
+    const input = $(`input-${slotId}`);
+    const form  = $(`form-${slotId}`);
+    const primaryWrap = $(`primary-${slotId}`); // Guardar/Cancelar (modo edición)
+    const saveBtn = $(`save-btn-${slotId}`);
+    const cancelBtn = $(`cancel-btn-${slotId}`);
+    const editBtn = $(`edit-btn-${slotId}`);
+    const addBtn  = $(`add-btn-${slotId}`);
+    const addWrap = $(`addwrap-${slotId}`);
+
+    if (isLocked) return; // nada que activar en UI
+
+    // --- Caso slot con RUT guardado (readonly por defecto)
+    if (hasRut) {
+      if (editBtn) {
+        editBtn.addEventListener('click', () => {
+          input.readOnly = false;
+          input.focus();
+          if (primaryWrap) primaryWrap.classList.remove('hide');
+          if (editBtn) editBtn.classList.add('hide'); // oculto mientras edito
+        });
+      }
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+          input.readOnly = true;
+          if (primaryWrap) primaryWrap.classList.add('hide');
+          if (editBtn) editBtn.classList.remove('hide');
+          window.location.reload(); // simple reset
+        });
+      }
+      if (saveBtn) {
+        saveBtn.addEventListener('click', () => form.submit());
+      }
+      if (input && saveBtn) {
+        input.addEventListener('input', () => {
+          const val = (input.value || '').trim();
+          saveBtn.textContent = val ? 'Guardar' : 'Agregar';
+        });
+      }
+      return;
+    }
+
+    // --- Caso slot vacío (input editable desde el inicio)
+    if (addBtn && addWrap) {
+      const syncAddBtn = () => {
+        const val = (input.value || '').trim();
+        addBtn.disabled = !val;
+        addBtn.textContent = val ? 'Guardar' : 'Agregar';
+      };
+      syncAddBtn();
+      input.addEventListener('input', syncAddBtn);
+      addBtn.addEventListener('click', () => form.submit());
+    }
+  }
+
+  // Recorremos todas las filas y armamos la lógica
+  (function boot() {
+    {% for slot in slots %}
+      initRow(
+        "{{ slot.id }}",
+        {% if slot.rut %}true{% else %}false{% endif %},
+        {% if slot.locked_at or slot.state == 'locked' %}true{% else %}false{% endif %}
+      );
+    {% endfor %}
+  })();
+</script>

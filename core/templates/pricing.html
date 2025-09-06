@@ -1,0 +1,66 @@
+{% load socialaccount %}
+{% extends "base.html" %}
+
+{% block title %}Planes y Precios - Auto-CS{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom:6px;">Planes y Precios</h1>
+<p class="muted">Elige un plan. Puedes cambiarlo cuando quieras. Pagos con Mercado Pago (CLP).</p>
+
+{% if messages %}
+  <div style="margin:12px 0;">
+    {% for m in messages %}
+      <div class="msg {% if m.tags %}{{ m.tags }}{% endif %}" style="padding:10px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;">
+        {{ m }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<div style="display:grid;grid-template-columns: repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:16px;">
+  {% for p in plans %}
+  <div style="border:1px solid #e5e7eb;border-radius:12px;padding:18px;display:flex;flex-direction:column;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2 style="margin:0;font-size:18px;font-weight:700;">{{ p.name }}</h2>
+      {% if request.user.is_authenticated and usc and usc.plan_id == p.id %}
+        <span style="background:#ecfdf5;color:#047857;padding:4px 10px;border-radius:999px;font-size:12px;">Tu plan</span>
+      {% endif %}
+    </div>
+
+    <p class="muted" style="margin:6px 0 12px 0;">
+      {{ p.rut_quota }} RUT{{ p.rut_quota|pluralize:"s" }}
+    </p>
+
+    <p style="font-size:28px;font-weight:800;margin:0 0 12px 0;">
+      ${{ p.price_month|floatformat:0 }} <span class="muted" style="font-size:13px;">/ mes</span>
+    </p>
+
+    <ul style="padding-left:18px;margin:6px 0 14px 0;line-height:1.5;">
+      <li>Gestión de RUTs desde tu cuenta</li>
+      <li>Soporte por correo</li>
+      <li>Upgrade/downgrade en cualquier momento</li>
+    </ul>
+
+    <div style="margin-top:auto;display:flex;gap:8px;flex-wrap:wrap;">
+      {% if request.user.is_authenticated %}
+        <a class="btn" href="{% url 'billing_checkout' p.code %}">Contratar {{ p.name }}</a>
+      {% else %}
+        <a class="btn" href="{% provider_login_url 'google' %}">Continuar con Google</a>
+        <!-- Alternativa (sin provider_login_url): <a class="btn" href="/accounts/login/?next=/pricing/">Iniciar sesión</a> -->
+      {% endif %}
+    </div>
+  </div>
+  {% empty %}
+    <p class="muted">No hay planes activos por ahora.</p>
+  {% endfor %}
+</div>
+
+<!-- Sugerencia de navegación secundaria -->
+<div style="margin-top:18px;">
+  {% if request.user.is_authenticated %}
+    <a class="btn light" href="{% url 'account' %}">Ir a mi cuenta</a>
+  {% else %}
+    <a class="btn light" href="/accounts/login/?next=/pricing/">¿Ya tienes cuenta? Inicia sesión</a>
+  {% endif %}
+</div>
+{% endblock %}

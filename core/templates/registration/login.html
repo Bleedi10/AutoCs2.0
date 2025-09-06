@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Ingresar - Auto-CS{% endblock %}
+{% block content %}
+<h1>Ingresar</h1>
+
+<form method="post">
+  {% csrf_token %}
+  <p>
+    <label for="id_username">Usuario</label><br>
+    <input type="text" name="username" autofocus required id="id_username">
+  </p>
+  <p>
+    <label for="id_password">Contraseña</label><br>
+    <input type="password" name="password" required id="id_password">
+  </p>
+  <button class="btn" type="submit">Entrar</button>
+  {% if form.errors %}<p class="muted">Usuario o contraseña inválidos.</p>{% endif %}
+</form>
+
+<p class="muted" style="margin-top:12px;">
+  ¿No tienes cuenta? Pídele a un admin que te cree un usuario.
+</p>
+{% endblock %}

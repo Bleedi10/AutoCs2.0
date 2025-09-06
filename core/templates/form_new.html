@@ -1,0 +1,99 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Nuevo formulario</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:24px;color:#111827}
+    .container{max-width:720px;margin:auto}
+    .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:16px;background:#fff}
+    .muted{color:#6b7280}
+    label{display:block;margin:12px 0 6px}
+    input[type="password"],input[type="file"],select{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px}
+    .btn{padding:10px 14px;border-radius:10px;border:1px solid #d1d5db;background:#111827;color:#fff;cursor:pointer}
+    .btn.secondary{background:#fff;color:#111827}
+    .link{color:#1d4ed8;text-decoration:none}
+    .msgs{margin:8px 0}
+    .msg{padding:10px;border-radius:8px;margin-bottom:8px}
+    .success{background:#ecfdf5;color:#047857}
+    .error{background:#fef2f2;color:#b91c1c}
+    .info{background:#eff6ff;color:#1d4ed8}
+    .row{display:grid;grid-template-columns:1fr;gap:12px}
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Nuevo formulario</h1>
+
+  {% if messages %}
+  <div class="msgs">
+    {% for m in messages %}
+      <div class="msg {% if m.tags %}{{ m.tags }}{% endif %}">{{ m }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="card">
+    {% if rut_slots %}
+      <form method="post" enctype="multipart/form-data" class="row">
+        {% csrf_token %}
+
+        <!-- 1) RUT (dropdown con los guardados en Account) -->
+        <div>
+          <label for="rut_slot_id">RUT</label>
+          <select id="rut_slot_id" name="rut_slot_id" required>
+            <option value="" disabled selected>Selecciona un RUT…</option>
+            {% for s in rut_slots %}
+              <option value="{{ s.id }}">
+                {{ s.rut }} {% if s.state == 'locked' %}(bloqueado){% endif %}
+              </option>
+            {% endfor %}
+          </select>
+          <p class="muted" style="margin-top:6px">Se listan RUTs en estado <em>available</em> o <em>locked</em>.</p>
+        </div>
+
+        <!-- 2) Contraseña de SII -->
+        <div>
+          <label for="sii_password">Contraseña SII</label>
+          <input id="sii_password" name="sii_password" type="password" required autocomplete="current-password">
+          <p class="muted" style="margin-top:6px">No se almacena en la base de datos; se usa solo en este proceso.</p>
+        </div>
+
+        <!-- 3) Tipo (Compras/Ventas) -->
+        <div>
+          <label for="type">Tipo</label>
+          <select id="type" name="type" required>
+            <option value="" disabled selected>Selecciona tipo…</option>
+            <option value="compras">Compras</option>
+            <option value="ventas">Ventas</option>
+          </select>
+        </div>
+
+        <!-- 4) CSV 33 -->
+        <div>
+          <label for="csv_33">CSV 33</label>
+          <input id="csv_33" name="csv_33" type="file" accept=".csv,text/csv" required>
+        </div>
+
+        <!-- 5) CSV 46 -->
+        <div>
+          <label for="csv_46">CSV 46</label>
+          <input id="csv_46" name="csv_46" type="file" accept=".csv,text/csv" required>
+        </div>
+
+        <!-- 6) Enviar -->
+        <div style="margin-top:8px">
+          <button type="submit" class="btn">Enviar</button>
+          <a class="btn secondary" href="{% url 'account' %}" style="margin-left:8px">Volver</a>
+        </div>
+      </form>
+    {% else %}
+      <p><strong>No tienes RUTs configurados.</strong></p>
+      <p class="muted">Agrega un RUT en tu <a class="link" href="{% url 'account' %}">cuenta</a> para usar el formulario.</p>
+    {% endif %}
+  </div>
+</div>
+</body>
+</html>
