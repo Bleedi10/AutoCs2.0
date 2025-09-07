@@ -16,6 +16,7 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 
 from .models import (
     Plan,
@@ -309,5 +310,63 @@ def billing_webhook(request: HttpRequest) -> HttpResponse:
                     write_audit(None, "mp_webhook_activate_ok", {"user_id": user_id, "plan": plan_code})
                 except Exception as e:
                     write_audit(None, "mp_webhook_activate_err", {"user_id": user_id, "plan": plan_code, "error": str(e)})
+
+    # Manejo de suscripciones (preapproval): alta/cancelación/pausa
+    if (topic == "preapproval") or (action and action.startswith("preapproval")):
+        preapproval_id = data.get("data", {}).get("id") or data.get("id")
+        sdk = _get_mp_sdk()
+        if not (sdk and preapproval_id):
+            return JsonResponse({"ok": True})
+
+        try:
+            info = sdk.preapproval().get(preapproval_id)
+        except Exception as e:
+            write_audit(None, "mp_preapproval_get_error", {"preapproval_id": preapproval_id, "error": str(e)})
+            return JsonResponse({"ok": True})
+
+        presp = info.get("response", {}) or {}
+        pstatus = (presp.get("status") or "").lower()
+        ext_ref = presp.get("external_reference") or ""
+        write_audit(None, "mp_preapproval_get_ok", {"preapproval_id": preapproval_id, "status": pstatus, "ext_ref": ext_ref})
+
+        user_id, plan_code = None, None
+        try:
+            parts = dict(pair.split(":", 1) for pair in ext_ref.split("|"))
+            user_id = int(parts.get("user"))
+            plan_code = parts.get("plan")
+        except Exception:
+            pass
+
+        if not (user_id and plan_code):
+            return JsonResponse({"ok": True})
+
+        # Activación
+        if pstatus in ("authorized", "authorized_pending_payment", "active", "approved"):
+            try:
+                plan = Plan.objects.get(code=plan_code, is_active=True)
+                usc, _ = UserSubscriptionCurrent.objects.get_or_create(user_id=user_id)
+                usc.plan = plan
+                usc.status = "active"
+                usc.provider = "mercadopago"
+                usc.external_subscription_id = str(preapproval_id)
+                usc.activated_at = timezone.now()
+                usc.expires_at = usc.activated_at + timezone.timedelta(days=30)
+                usc.save()
+                write_audit(None, "mp_preapproval_activate_ok", {"user_id": user_id, "plan": plan_code})
+            except Exception as e:
+                write_audit(None, "mp_preapproval_activate_err", {"user_id": user_id, "plan": plan_code, "error": str(e)})
+
+        # Cancelación/pausa/rechazo -> desactivar y limpiar slots
+        elif pstatus in ("cancelled", "paused", "rejected", "expired"):  # immediate deactivate
+            try:
+                from .models import UserRutSlot
+
+                UserRutSlot.objects.filter(user_id=user_id).delete()
+                UserSubscriptionCurrent.objects.filter(user_id=user_id).delete()
+                write_audit(None, "mp_preapproval_deactivate_ok", {"user_id": user_id, "status": pstatus})
+            except Exception as e:
+                write_audit(None, "mp_preapproval_deactivate_err", {"user_id": user_id, "status": pstatus, "error": str(e)})
+
+        return JsonResponse({"ok": True})
 
     return JsonResponse({"ok": True})

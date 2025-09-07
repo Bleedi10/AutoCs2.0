@@ -86,7 +86,8 @@ class Plan(models.Model):
     code = models.CharField(max_length=32, unique=True)
     name = models.CharField(max_length=80)
     price_month = models.DecimalField(max_digits=10, decimal_places=2)
-    rut_quota = models.PositiveSmallIntegerField(choices=((1, "1"), (2, "2"), (4, "4")))
+    # Permitir valores arbitrarios (1, 5, 20,...)
+    rut_quota = models.PositiveSmallIntegerField()
     is_active = models.BooleanField(default=True)
 
     def __str__(self) -> str:

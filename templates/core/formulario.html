@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Formulario{% endblock %}
+{% block content %}
+  <h1 class="mb-3">Formulario</h1>
+  {% if not has_active %}
+    <div class="alert alert-warning">Necesitas un plan activo para usar el formulario.</div>
+    <a class="btn btn-primary" href="{% url 'precios' %}">Ver planes</a>
+  {% else %}
+    <form method="post" class="card p-3 shadow-sm">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label">RUT a utilizar</label>
+        <select class="form-select" name="slot_id" required>
+          <option value="" selected disabled>Selecciona un RUT</option>
+          {% for s in slots %}
+            {% if s.rut %}
+              <option value="{{ s.id }}">Slot {{ s.slot_index }} · {{ s.rut }} · {{ s.state }}</option>
+            {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+      <input type="hidden" name="type" value="compras">
+      <input type="hidden" name="sii_rut" value="">
+      <div>
+        <button type="submit" class="btn btn-primary">Enviar</button>
+      </div>
+    </form>
+  {% endif %}
+{% endblock %}

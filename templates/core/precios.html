@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Precios{% endblock %}
+{% block content %}
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="m-0">Elige tu plan</h1>
+    {% if mp_is_test %}
+      <span class="badge text-bg-warning">Sandbox activo</span>
+    {% endif %}
+  </div>
+  <div class="row g-3">
+    {% for p in plans %}
+      <div class="col-12 col-sm-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body d-flex flex-column">
+            <h4 class="card-title">{{ p.name }}</h4>
+            <h5 class="card-subtitle mb-2 text-muted">Cupo: {{ p.rut_quota }} RUT{{ p.rut_quota|pluralize }}</h5>
+            {% if p.price_month %}
+              <p class="display-6">${{ p.price_month }}</p>
+            {% endif %}
+            <div class="mt-auto">
+              {% if user_is_authenticated %}
+                <a class="btn btn-primary w-100" href="{% url 'contratar_plan' p.code %}">Contratar</a>
+              {% else %}
+                <a class="btn btn-outline-primary w-100" href="{% url 'account_signup' %}?plan={{ p.code }}">Contratar</a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}

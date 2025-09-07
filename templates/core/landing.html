@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Inicio{% endblock %}
+{% block content %}
+  <div class="py-5 text-center">
+    <h1 class="display-5 fw-bold">Automatiza tus formularios SII</h1>
+    <p class="col-lg-8 mx-auto lead">Contrata un plan, carga tus RUTs y opera con tranquilidad. Simplicidad y control en un solo lugar.</p>
+    <div class="d-inline-flex gap-2">
+      <a class="btn btn-primary btn-lg" href="{% url 'account_signup' %}">Registrarme</a>
+      <a class="btn btn-outline-secondary btn-lg" href="{% url 'precios' %}">Ver precios</a>
+    </div>
+  </div>
+{% endblock %}

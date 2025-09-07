@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
+    "allauth.socialaccount.providers.microsoft",
     
 ]
 
@@ -63,7 +64,10 @@ ACCOUNT_SIGNUP_FIELDS = ["email", "username*", "password1*", "password2*"]
 # A dónde van las rutas de login/logout (usamos allauth directamente)
 LOGIN_URL = "account_login"       # /accounts/login/
 LOGIN_REDIRECT_URL = "account"
-LOGOUT_REDIRECT_URL = "pricing"
+# Asegura que logout (allauth) siempre vuelva a landing
+LOGOUT_REDIRECT_URL = "/"
+ACCOUNT_LOGOUT_REDIRECT_URL = "/"
+ACCOUNT_LOGOUT_ON_GET = True
 
 # --- Middleware ---
 MIDDLEWARE = [
@@ -90,6 +94,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",  # necesario para allauth
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "core.context_processors.global_user",
             ],
         },
     },
@@ -108,6 +113,12 @@ DATABASES = {
         "PORT": "5432",
     }
 }
+
+# Usar SQLite para tests si no se configura lo contrario
+import os as _os
+if _os.getenv("USE_SQLITE_FOR_TESTS", "1") == "1":
+    DATABASES["default"].setdefault("TEST", {})
+    DATABASES["default"]["TEST"]["ENGINE"] = "django.db.backends.sqlite3"
 # --- Validación de contraseñas ---
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -125,6 +136,7 @@ USE_TZ = True
 # --- Estáticos / Media ---
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]  # crea BASE_DIR/static cuando la uses
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -137,9 +149,15 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://127.0.0.1:8000")
 
 # --- Mercado Pago (desde variables de entorno) ---
-MP_ACCESS_TOKEN   = os.getenv("MP_ACCESS_TOKEN", "")
-MP_PUBLIC_KEY     = os.getenv("MP_PUBLIC_KEY", "")
+MP_ACCESS_TOKEN   = os.getenv("MP_ACCESS_TOKEN", "TEST-6374217171817553-081910-f3bad05eb56b43556b4a245931a525d4-171920179")
+MP_PUBLIC_KEY     = os.getenv("MP_PUBLIC_KEY", "TEST-18e1ab41-da59-4022-972b-e8863e530e5c")
 MP_WEBHOOK_SECRET = os.getenv("MP_WEBHOOK_SECRET", "dev-secret")
 # En local déjalo vacío; con ngrok exporta:
 #   MP_WEBHOOK_URL="https://<ngrok>/webhooks/mercadopago"
 MP_WEBHOOK_URL    = os.getenv("MP_WEBHOOK_URL", "")
+
+# --- API bridge Frontend (NextAuth) → Django ---
+FRONTEND_SYNC_API_KEY = os.getenv("FRONTEND_SYNC_API_KEY", "dev-frontend-sync")
+
+# Detección rápida de modo sandbox/test para depuración
+MP_IS_TEST = str(MP_ACCESS_TOKEN).startswith("TEST-") or str(MP_PUBLIC_KEY).startswith("TEST-")

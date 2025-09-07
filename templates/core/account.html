@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Account{% endblock %}
+{% block content %}
+  <h1 class="mb-3">Mi cuenta</h1>
+  {% if not subscription or not subscription.plan %}
+    <div class="alert alert-info">No tienes un plan activo.</div>
+    <a class="btn btn-primary" href="{% url 'precios' %}">Elige un plan</a>
+  {% else %}
+    <div class="mb-4">
+      <span class="me-2">Plan actual:</span>
+      <span class="badge text-bg-primary">{{ subscription.plan.name }}</span>
+      <span class="ms-2 text-muted">Cupo: {{ subscription.plan.rut_quota }}</span>
+    </div>
+
+    <h3 class="mb-3">RUTs</h3>
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr><th>#</th><th>RUT</th><th>Estado</th><th>Acciones</th></tr>
+        </thead>
+        <tbody>
+          {% for s in slots %}
+            <tr>
+              <td>{{ s.slot_index }}</td>
+              <td>
+                {% if s.state != 'locked' %}
+                  <form class="d-flex gap-2" method="post" action="{% url 'slot_update' s.id %}">
+                    {% csrf_token %}
+                    <input class="form-control" type="text" name="rut" value="{{ s.rut }}" placeholder="12345678-5">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                  </form>
+                {% else %}
+                  <span class="fw-semibold">{{ s.rut }}</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if s.state == 'locked' %}
+                  <span class="badge text-bg-secondary">locked</span>
+                {% elif s.state == 'available' %}
+                  <span class="badge text-bg-success">available</span>
+                {% else %}
+                  <span class="badge text-bg-light text-dark">empty</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if s.state != 'locked' and s.rut %}
+                  <form method="post" action="{% url 'slot_delete' s.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger">Eliminar</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+{% endblock %}
