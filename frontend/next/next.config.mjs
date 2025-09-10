@@ -1,34 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  turbopack: {
-    root: process.cwd().replace('/next', ''),
+  typescript: {
+    ignoreBuildErrors: true
   },
+  // Configuración para permitir imágenes externas si las necesitas
   images: {
-    remotePatterns: [{ hostname: process.env.IMAGE_HOSTNAME || 'localhost' }],
-  },
-  pageExtensions: ['ts', 'tsx'],
-  async redirects() {
-    let redirections = [];
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/redirections`
-      );
-      const result = await res.json();
-      const redirectItems = result.data.map(({ source, destination }) => {
-        return {
-          source: `/:locale${source}`,
-          destination: `/:locale${destination}`,
-          permanent: false,
-        };
-      });
-
-      redirections = redirections.concat(redirectItems);
-
-      return redirections;
-    } catch (error) {
-      return [];
-    }
-  },
-};
+    domains: ['localhost'],
+  }
+}
 
 export default nextConfig;

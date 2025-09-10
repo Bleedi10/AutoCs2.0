@@ -17,7 +17,18 @@ const config: Config = {
       colors: {
         charcoal: '#08090A',
         lightblack: '#1C1C1C',
-        secondary: '#E6E6E6',
+        // Brand palette
+        primary: '#28C7C4', // main brand / action
+        primaryAlt: '#1CB4B1', // alternative shade for hover
+        secondary: '#0f172a', // deep blue (petroleum)
+        accent: '#0f172a',
+        success: '#16a34a',
+        warning: '#b45309',
+        error: '#b91c1c',
+        // Neutrals
+        background: '#f8fafc',
+        foreground: '#0f172a',
+        textSecondary: '#64748b',
         muted: 'var(--neutral-200)',
       },
       boxShadow: {

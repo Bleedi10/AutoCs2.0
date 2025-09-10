@@ -1,21 +1,14 @@
-import type { Viewport } from 'next';
-
-import { Locale, i18n } from '@/i18n.config';
-
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
+import RootLayoutClient from './RootLayoutClient';
 
-import { SlugProvider } from './context/SlugContext';
+const inter = Inter({ subsets: ['latin'] });
 
-export const viewport: Viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#06b6d4' },
-    { media: '(prefers-color-scheme: dark)', color: '#06b6d4' },
-  ],
+export const metadata: Metadata = {
+  title: 'Visual Demo',
+  description: 'Panel sencillo para gestionar RUTs',
 };
-
-export async function generateStaticParams() {
-  return i18n.locales.map((locale) => ({ lang: locale }));
-}
 
 export default function RootLayout({
   children,
@@ -23,10 +16,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning>
-        <SlugProvider>{children}</SlugProvider>
-      </body>
+    <html lang="es" className={inter.className}>
+      <RootLayoutClient>{children}</RootLayoutClient>
     </html>
   );
 }
