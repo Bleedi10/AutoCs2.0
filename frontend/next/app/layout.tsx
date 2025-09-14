@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import RootLayoutClient from './RootLayoutClient';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Visual Demo',
   description: 'Panel sencillo para gestionar RUTs',
+  icons: { icon: '/favicon.ico' },
 };
 
 export default function RootLayout({
@@ -16,8 +16,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" className={inter.className}>
-      <RootLayoutClient>{children}</RootLayoutClient>
+    <html lang="es">
+      <body suppressHydrationWarning className={inter.className}>{children}</body>
     </html>
   );
 }

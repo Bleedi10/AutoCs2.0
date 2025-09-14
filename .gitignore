@@ -1,25 +1,33 @@
-# Python
+# Node / Next.js
+frontend/next/.next/
+frontend/next/node_modules/
+frontend/next/.env*
+frontend/next/.vercel/
+frontend/next/.turbo/
+frontend/next/yarn-error.log
+
+# Yarn (root)
+yarn-error.log
+
+# Python / Django
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
-*.pyc
-
-# Environments
-.env
-.env.*
+.Python
+env/
 venv/
 .venv/
-
-# Django
-*.sqlite3
+.pytest_cache/
 db.sqlite3
 media/
-staticfiles/
 
-# IDE/OS
+# OS / Editor
+.DS_Store
+Thumbs.db
 .vscode/
 .idea/
+
+# Logs
 *.log
-*.DS_Store
-Thumbs.db
+

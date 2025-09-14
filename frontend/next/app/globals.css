@@ -1,3 +1,31 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Global utility animations and effects used by VisualDemoApp */
+@layer utilities {
+  @keyframes aurora {
+    0%, 100% { transform: translate3d(0,0,0) scale(1); }
+    50% { transform: translate3d(0,-20px,0) scale(1.05); }
+  }
+  .animate-aurora { animation: aurora 8s ease-in-out infinite; }
+
+  @keyframes shine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  .shine::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 0%, rgba(255,255,255,0.16) 45%, rgba(255,255,255,0.16) 55%, transparent 100%);
+    transform: translateX(-100%);
+    animation: shine 2.2s linear infinite;
+  }
+
+  @keyframes beam { 0% { opacity: .2; } 50% { opacity: .7; } 100% { opacity: .2; } }
+  .animate-beam { animation: beam 3s ease-in-out infinite; }
+
+  @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+  .animate-marquee { animation: marquee 18s linear infinite; }
+}
